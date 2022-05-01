@@ -1,28 +1,52 @@
 const http = require("http");
+const fs = require("fs");
 
-let requestsCount = 0;
+const delay = (ms) => {
+  return new Promise((res, rej) => {
+    setTimeout(() => {
+      res();
+    }, ms);
+  });
+};
 
-const server = http.createServer((req, res) => {
+const readFile = (path) => {
+  return new Promise((res, rej) => {
+    fs.readFile(path, (err, data) => {
+      if (err) {
+        rej(err);
+      } else {
+        res(data);
+      }
+    });
+  });
+};
+
+const server = http.createServer(async (req, res) => {
   switch (req.url) {
-    case "/lol":
-      res.write(`lol`);
-      break;
     case "/":
-    case "/kek":
-      res.write(`kek`);
+      try {
+        const result = await readFile("./pages/about.html");
+        res.write(result);
+      } catch (error) {
+        res.statusCode = 500;
+        res.write("500 Internal server error");
+      } finally {
+        res.end();
+      }
       break;
-    case "/cheburek":
-      res.write(`cheburek`);
+
+    case "/delay":
+      await delay(3000);
+      res.write("delay");
+      res.end();
       break;
 
     default:
       res.statusCode = 404;
       res.write("404 not found");
+      res.end();
       break;
   }
-  requestsCount++;
-  res.write(`markus lucius castus, requestsCount: ${requestsCount}`);
-  res.end();
 });
 
 server.listen(3003);
