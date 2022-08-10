@@ -1,17 +1,53 @@
 import express from "express";
 const app = express();
+const jsonParser = express.json();
+app.use(jsonParser);
 const port = 3001;
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
+const db = {
+  courses: [
+    { id: 0, title: "frontend" },
+    { id: 1, title: "bakcend" },
+  ],
+};
+
+app.get("/courses", (req, res) => {
+  let results = db.courses;
+
+  if (req.query.title) {
+    results = db.courses.filter(
+      (course) => course.title.indexOf(req.query.title as string) > -1
+    );
+  }
+
+  res.json(results);
 });
 
-app.get("/samurais", (req, res) => {
-  res.send("Hello Samurais!!!");
+app.get("/courses/:id", (req, res) => {
+  const foundedCourse = db.courses.find((item) => item.id === +req.params.id);
+
+  if (!foundedCourse) {
+    res.sendStatus(404);
+    return;
+  }
+
+  res.json(foundedCourse);
 });
 
-app.post("/samurais", (req, res) => {
-  res.send("We have created samurais!");
+app.post("/courses", (req, res) => {
+  if (!req.body?.title) {
+    res.sendStatus(400);
+    return;
+  }
+
+  const newCourse = {
+    id: Date.now(),
+    title: req.body?.title,
+  };
+
+  db.courses.push(newCourse);
+
+  res.json(newCourse);
 });
 
 app.listen(port, () => {
